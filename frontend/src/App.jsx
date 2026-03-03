@@ -1,4 +1,12 @@
 import { useState } from "react";
+import ClientsPage from "./pages/ClientsPage";
+import TasksPage from "./pages/TasksPage";
+import RolesPage from "./pages/RolesPage";
+import EmployeesPage from "./pages/EmployeesPage";
+import PoliciesPage from "./pages/PoliciesPage";
+import ClaimsPage from "./pages/ClaimsPage";
+import RemindersPage from "./pages/RemindersPage";
+import TargetsPage from "./pages/TargetsPage";
 
 // COMPLETE UNIFIED INSURANCE CRM
 // All 9 modules integrated: Dashboard, Roles, Employees, Tasks, Clients, Policies, Claims, Reminders, Targets
@@ -86,7 +94,14 @@ export default function App() {
       </aside>
       <main style={{ flex: 1, overflow: "auto", minWidth: 0 }}>
         {page === "dashboard" && <DashboardPage />}
-        {page !== "dashboard" && <ComingSoonPage title={navItems.find(n => n.id === page)?.label} icon={navItems.find(n => n.id === page)?.icon} />}
+        {page === "clients" && <ClientsPage />}
+        {page === "tasks" && <TasksPage />}
+        {page === "roles" && <RolesPage />}
+        {page === "employees" && <EmployeesPage />}
+        {page === "policies" && <PoliciesPage />}
+        {page === "claims" && <ClaimsPage />}
+        {page === "reminders" && <RemindersPage />}
+        {page === "targets" && <TargetsPage />}
       </main>
     </div>
   );
@@ -128,7 +143,7 @@ function DashboardPage() {
       <div style={{ marginTop: 32, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", borderRadius: 16, padding: 32, color: "#fff" }}>
         <h2 style={{ margin: "0 0 20px", fontSize: 20, fontWeight: 800 }}>System Overview</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 24 }}>
-          {[{label:"Total Premium",value:"₹23.4 Cr",icon:"rupee"},{label:"Claims Settled",value:"₹8.9 Cr",icon:"check"},{label:"Completion",value:"94.2%",icon:"chart"},{label:"Response Time",value:"2.4 hrs",icon:"bell"}].map((s,i)=>(<div key={i} style={{display:"flex",alignItems:"center",gap:12}}><div style={{background:"rgba(255,255,255,0.2)",padding:10,borderRadius:10}}><Icon name={s.icon} size={20}/></div><div><div style={{fontSize:11,opacity:0.8,marginBottom:2}}>{s.label}</div><div style={{fontSize:20,fontWeight:800}}>{s.value}</div></div></div>))}
+          {[{ label: "Total Premium", value: "₹23.4 Cr", icon: "rupee" }, { label: "Claims Settled", value: "₹8.9 Cr", icon: "check" }, { label: "Completion", value: "94.2%", icon: "chart" }, { label: "Response Time", value: "2.4 hrs", icon: "bell" }].map((s, i) => (<div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}><div style={{ background: "rgba(255,255,255,0.2)", padding: 10, borderRadius: 10 }}><Icon name={s.icon} size={20} /></div><div><div style={{ fontSize: 11, opacity: 0.8, marginBottom: 2 }}>{s.label}</div><div style={{ fontSize: 20, fontWeight: 800 }}>{s.value}</div></div></div>))}
         </div>
       </div>
     </div>
