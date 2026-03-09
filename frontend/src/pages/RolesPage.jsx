@@ -11,7 +11,7 @@ export default function RolesPage() {
     const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [formData, setFormData] = useState({ name: "", description: "", color: "#6366f1", permissions: [] });
+    const [editingId, setEditingId] = useState(null);
 
     const availablePermissions = ['all','clients','policies','claims','reminders','targets','reports','tasks','employees','roles'];
 
@@ -34,17 +34,40 @@ export default function RolesPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await roleAPI.create(formData);
-            toast.success("Role created successfully!");
+            if (editingId) {
+                await roleAPI.update(editingId, formData);
+                toast.success("Role updated successfully!");
+            } else {
+                await roleAPI.create(formData);
+                toast.success("Role created successfully!");
+            }
             setIsModalOpen(false);
             fetchRoles();
         } catch (err) {
-            toast.error(err.response?.data?.message || "Error creating role");
+            toast.error(err.response?.data?.message || "Error saving role");
+        }
+    };
+
+    const handleEdit = (role) => {
+        setFormData({ name: role.name, description: role.description, color: role.color, permissions: role.permissions });
+        setEditingId(role._id);
+        setIsModalOpen(true);
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this role?")) return;
+        try {
+            await roleAPI.delete(id);
+            toast.success("Role deleted!");
+            fetchRoles();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Error deleting role");
         }
     };
 
     const openNewModal = () => {
         setFormData({ name: "", description: "", color: "#6366f1", permissions: [] });
+        setEditingId(null);
         setIsModalOpen(true);
     };
 
@@ -77,14 +100,23 @@ export default function RolesPage() {
                 ) : roles.length === 0 ? (
                     <div style={{ color: "#64748b", padding: 20 }}>No roles found. Please run the seed script to generate default ones.</div>
                 ) : roles.map(r => (
-                    <div key={r._id} style={{ background: "#141824", border: `1px solid ${r.color}33`, borderRadius: 12, padding: 24, borderTop: `4px solid ${r.color}` }}>
+                    <div key={r._id} style={{ background: "#141824", border: `1px solid ${r.color}33`, borderRadius: 12, padding: 24, borderTop: `4px solid ${r.color}`, position: "relative" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                            <h3 style={{ margin: 0, color: "#f1f5f9", fontSize: 18, fontWeight: 700 }}>{r.name}</h3>
-                            {r.isSystem && <Badge color="#64748b">System</Badge>}
+                            <div>
+                                <h3 style={{ margin: 0, color: "#f1f5f9", fontSize: 18, fontWeight: 700 }}>{r.name}</h3>
+                                {r.isSystem && <Badge color="#64748b">System</Badge>}
+                            </div>
+                            <div style={{ display: "flex", gap: 8 }}>
+                                <button onClick={() => handleEdit(r)} style={{ background: "none", border: "none", color: "#3b82f6", cursor: "pointer", opacity: 0.7 }}><Plus size={16} title="Edit" /></button>
+                                {!r.isSystem && <button onClick={() => handleDelete(r._id)} style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", opacity: 0.7 }}><X size={16} title="Delete" /></button>}
+                            </div>
                         </div>
                         <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 16 }}>{r.description || 'No description provided.'}</p>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                             {r.permissions.map(p => <Badge key={p} color={r.color}>{p}</Badge>)}
+                        </div>
+                        <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid #1e2535", color: "#64748b", fontSize: 11 }}>
+                            {r.employeeCount || 0} Employees assigned
                         </div>
                     </div>
                 ))}
@@ -95,7 +127,7 @@ export default function RolesPage() {
                 <div style={{ position: "fixed", inset: 0, background: "rgba(10, 14, 26, 0.8)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 20 }}>
                     <div style={{ background: "#141824", border: "1px solid #2d3748", borderRadius: 16, width: "100%", maxWidth: 500, overflow: "hidden", maxHeight: "90vh", display: "flex", flexDirection: "column", boxShadow: "0 20px 40px rgba(0,0,0,0.4)" }}>
                         <div style={{ padding: "20px 24px", borderBottom: "1px solid #1e2535", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <h2 style={{ margin: 0, color: "#f1f5f9", fontSize: 18, fontWeight: 700 }}>Build Custom Role</h2>
+                            <h2 style={{ margin: 0, color: "#f1f5f9", fontSize: 18, fontWeight: 700 }}>{editingId ? "Edit Role" : "Build Custom Role"}</h2>
                             <button onClick={() => setIsModalOpen(false)} style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer" }}><X size={20} /></button>
                         </div>
                         <div style={{ overflowY: "auto", padding: 24 }}>
@@ -125,10 +157,13 @@ export default function RolesPage() {
                                             </label>
                                         ))}
                                     </div>
+                                    {roles.find(r => r._id === editingId)?.isSystem && (
+                                        <p style={{ marginTop: 8, color: "#ef4444", fontSize: 11 }}>Note: Permissions for system roles cannot be modified.</p>
+                                    )}
                                 </div>
                                 <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 16, paddingTop: 20, borderTop: "1px solid #1e2535" }}>
                                     <button type="button" onClick={() => setIsModalOpen(false)} style={{ padding: "10px 20px", background: "transparent", color: "#94a3b8", border: "1px solid #2d3748", borderRadius: 8, cursor: "pointer", fontWeight: 600 }}>Cancel</button>
-                                    <button type="submit" style={{ padding: "10px 20px", background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 600 }}>Create Role</button>
+                                    <button type="submit" style={{ padding: "10px 20px", background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 600 }}>{editingId ? "Save Changes" : "Create Role"}</button>
                                 </div>
                             </form>
                         </div>

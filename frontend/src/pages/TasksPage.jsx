@@ -75,20 +75,29 @@ export default function TasksPage() {
                         <tr style={{ background: "#0f1420", color: "#64748b", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                             <th style={{ padding: "16px 20px", fontWeight: 600 }}>Task Title</th>
                             <th style={{ padding: "16px 20px", fontWeight: 600 }}>Category</th>
+                            <th style={{ padding: "16px 20px", fontWeight: 600 }}>Assigned To</th>
                             <th style={{ padding: "16px 20px", fontWeight: 600 }}>Due Date</th>
                             <th style={{ padding: "16px 20px", fontWeight: 600 }}>Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan={4} style={{ padding: 40, textAlign: "center", color: "#64748b" }}>Loading tasks...</td></tr>
+                            <tr><td colSpan={5} style={{ padding: 40, textAlign: "center", color: "#64748b" }}>Loading tasks...</td></tr>
                         ) : tasks.length === 0 ? (
-                            <tr><td colSpan={4} style={{ padding: 40, textAlign: "center", color: "#64748b" }}>No tasks found. Click "New Task" to create one.</td></tr>
+                            <tr><td colSpan={5} style={{ padding: 40, textAlign: "center", color: "#64748b" }}>No tasks found. Click "New Task" to create one.</td></tr>
                         ) : (
                             tasks.map(t => (
                                 <tr key={t._id} style={{ borderTop: "1px solid #1e2535" }}>
                                     <td style={{ padding: "16px 20px", color: "#f1f5f9", fontWeight: 600 }}>{t.title}</td>
                                     <td style={{ padding: "16px 20px", color: "#94a3b8" }}>{t.category}</td>
+                                    <td style={{ padding: "16px 20px", color: "#cbd5e1" }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                            <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#3b82f622", border: "1px solid #3b82f644", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#3b82f6", fontWeight: 700 }}>
+                                                {t.assignedTo?.name?.substring(0, 2).toUpperCase() || "??"}
+                                            </div>
+                                            {t.assignedTo?.name || "Unassigned"}
+                                        </div>
+                                    </td>
                                     <td style={{ padding: "16px 20px", color: "#cbd5e1" }}>{new Date(t.dueDate).toLocaleDateString()}</td>
                                     <td style={{ padding: "16px 20px" }}><Badge color="#3b82f6">{t.status}</Badge></td>
                                 </tr>
