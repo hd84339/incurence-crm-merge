@@ -8,10 +8,12 @@ import ClaimsPage from "./pages/ClaimsPage";
 import RemindersPage from "./pages/RemindersPage";
 import TargetsPage from "./pages/TargetsPage";
 
-// COMPLETE UNIFIED INSURANCE CRM
-// All 9 modules integrated: Dashboard, Roles, Employees, Tasks, Clients, Policies, Claims, Reminders, Targets
+import LoginPage from "./pages/LoginPage";
+import { authAPI } from "./services/api";
+import { Toaster, toast } from "react-hot-toast";
 
 const Icon = ({ name, size = 16 }) => {
+// ... existing Icon component ...
   const icons = {
     dashboard: "M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z",
     users: "M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z",
@@ -50,6 +52,33 @@ const StatCard = ({ label, value, sub, color = "#6366f1", icon }) => (
 
 export default function App() {
   const [page, setPage] = useState("dashboard");
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const res = await authAPI.getMe();
+          setUser(res.data.user);
+        } catch (err) {
+          localStorage.removeItem('token');
+        }
+      }
+      setAuthLoading(false);
+    };
+    checkAuth();
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+    toast.success('Logged out successfully');
+  };
+
+  if (authLoading) return <div style={{ height: '100vh', background: '#0a0e1a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6366f1' }}>Loading...</div>;
+  if (!user) return <><LoginPage onLogin={setUser} /><Toaster position="top-right" /></>;
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: "dashboard", color: "#6366f1" },
@@ -65,6 +94,7 @@ export default function App() {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#0a0e1a", color: "#f1f5f9", fontFamily: "'DM Sans', sans-serif" }}>
+      <Toaster position="top-right" />
       <aside style={{ width: 240, background: "#0f1420", borderRight: "1px solid #1e2535", display: "flex", flexDirection: "column", flexShrink: 0, position: "sticky", top: 0, height: "100vh" }}>
         <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid #1e2535" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -84,11 +114,16 @@ export default function App() {
         </nav>
         <div style={{ padding: "16px 12px", borderTop: "1px solid #1e2535" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px" }}>
-            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#6366f133", border: "2px solid #6366f166", display: "flex", alignItems: "center", justifyContent: "center", color: "#6366f1", fontSize: 11, fontWeight: 700 }}>AS</div>
+            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#6366f133", border: "2px solid #6366f166", display: "flex", alignItems: "center", justifyContent: "center", color: "#6366f1", fontSize: 11, fontWeight: 700 }}>{user?.avatar || 'AD'}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ color: "#f1f5f9", fontSize: 12, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Arun Sharma</div>
-              <div style={{ color: "#6366f1", fontSize: 10, fontWeight: 600 }}>Admin</div>
+              <div style={{ color: "#f1f5f9", fontSize: 12, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.name}</div>
+              <div style={{ color: "#6366f1", fontSize: 10, fontWeight: 600 }}>{user?.roleId?.name || 'User'}</div>
             </div>
+            <button onClick={handleLogout} title="Logout" style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', opacity: 0.7 }}><Icon name="dashboard" size={14} /></button> 
+          </div>
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #1e2535", textAlign: "center" }}>
+            <span style={{ color: "#475569", fontSize: 10 }}>Developed by </span>
+            <a href="https://www.linkedin.com/in/harsh-dubey-498498256/" target="_blank" rel="noopener noreferrer" style={{ color: "#6366f1", fontSize: 10, fontWeight: 700, textDecoration: "none" }}>Harsh Dubey</a>
           </div>
         </div>
       </aside>
