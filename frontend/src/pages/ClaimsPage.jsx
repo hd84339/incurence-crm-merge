@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, HeartPulse, X } from "lucide-react";
+import { Plus, HeartPulse, X, Trash2 } from "lucide-react";
 import { claimAPI, clientAPI, policyAPI } from "../services/api";
 import { toast } from "react-hot-toast";
 
@@ -13,12 +13,22 @@ export default function ClaimsPage() {
     const [policies, setPolicies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedClaims, setSelectedClaims] = useState([]);
     const [formData, setFormData] = useState({ client: "", policy: "", claimNumber: "", claimType: "Medical", claimAmount: "", incidentDate: "" });
 
     useEffect(() => {
         fetchClaims();
         fetchClientsAndPolicies();
     }, []);
+
+    const handleSelectAll = (e) => {
+        if (e.target.checked) setSelectedClaims(claims.map(c => c._id));
+        else setSelectedClaims([]);
+    };
+
+    const handleSelect = (id) => {
+        setSelectedClaims(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    };
 
     const fetchClientsAndPolicies = async () => {
         try {
@@ -52,6 +62,19 @@ export default function ClaimsPage() {
         }
     };
 
+    const handleDelete = async (id) => {
+        const ids = Array.isArray(id) ? id : [id];
+        if (!window.confirm(`Are you sure you want to delete ${ids.length} claim(s)?`)) return;
+        try {
+            await Promise.all(ids.map(i => claimAPI.delete(i)));
+            toast.success("Claim(s) deleted!");
+            setSelectedClaims([]);
+            fetchClaims();
+        } catch (err) {
+            toast.error("Error deleting claim(s)");
+        }
+    };
+
     const openNewModal = () => {
         setFormData({ client: clients[0]?._id || "", policy: policies[0]?._id || "", claimNumber: "", claimType: "Medical", claimAmount: "", incidentDate: "" });
         setIsModalOpen(true);
@@ -72,27 +95,40 @@ export default function ClaimsPage() {
             </div>
 
             <div style={{ background: "#141824", border: "1px solid #1e2535", borderRadius: 12, overflow: "hidden" }}>
+                <div style={{ padding: "16px 20px", borderBottom: "1px solid #1e2535", display: "flex", justifyContent: "flex-end" }}>
+                    {selectedClaims.length > 0 && (
+                        <button onClick={() => handleDelete(selectedClaims)} style={{ background: "#ef4444", color: "#fff", border: "none", padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                            <Trash2 size={14} /> Delete Selected ({selectedClaims.length})
+                        </button>
+                    )}
+                </div>
                 <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
                     <thead>
                         <tr style={{ background: "#0f1420", color: "#64748b", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                            <th style={{ padding: "16px 20px", width: 40 }}><input type="checkbox" checked={selectedClaims.length === claims.length && claims.length > 0} onChange={handleSelectAll} /></th>
                             <th style={{ padding: "16px 20px", fontWeight: 600 }}>Claim Type</th>
                             <th style={{ padding: "16px 20px", fontWeight: 600 }}>Amount</th>
                             <th style={{ padding: "16px 20px", fontWeight: 600 }}>Submitted On</th>
                             <th style={{ padding: "16px 20px", fontWeight: 600 }}>Status</th>
+                            <th style={{ padding: "16px 20px", fontWeight: 600, textAlign: "right" }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan={4} style={{ padding: 40, textAlign: "center", color: "#64748b" }}>Loading claims...</td></tr>
+                            <tr><td colSpan={6} style={{ padding: 40, textAlign: "center", color: "#64748b" }}>Loading claims...</td></tr>
                         ) : claims.length === 0 ? (
-                            <tr><td colSpan={4} style={{ padding: 40, textAlign: "center", color: "#64748b" }}>No claims filed yet.</td></tr>
+                            <tr><td colSpan={6} style={{ padding: 40, textAlign: "center", color: "#64748b" }}>No claims filed yet.</td></tr>
                         ) : (
                             claims.map(c => (
                                 <tr key={c._id} style={{ borderTop: "1px solid #1e2535" }}>
+                                    <td style={{ padding: "16px 20px" }}><input type="checkbox" checked={selectedClaims.includes(c._id)} onChange={() => handleSelect(c._id)} /></td>
                                     <td style={{ padding: "16px 20px", color: "#f1f5f9", fontWeight: 600 }}>{c.type}</td>
                                     <td style={{ padding: "16px 20px", color: "#ef4444", fontWeight: 600 }}>₹{c.claimAmount?.toLocaleString() || 0}</td>
                                     <td style={{ padding: "16px 20px", color: "#cbd5e1" }}>{new Date(c.submissionDate || c.createdAt).toLocaleDateString()}</td>
                                     <td style={{ padding: "16px 20px" }}><Badge color="#ef4444">{c.status}</Badge></td>
+                                    <td style={{ padding: "16px 20px", textAlign: "right" }}>
+                                        <button onClick={() => handleDelete(c._id)} style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", padding: 6, opacity: 0.8 }}><Trash2 size={16} /></button>
+                                    </td>
                                 </tr>
                             ))
                         )}
