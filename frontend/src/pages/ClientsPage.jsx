@@ -14,10 +14,20 @@ export default function ClientsPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({ name: "", email: "", phone: "", clientType: "Individual", priority: "Medium", status: "Prospect" });
     const [editingId, setEditingId] = useState(null);
+    const [selectedClients, setSelectedClients] = useState([]);
 
     useEffect(() => {
         fetchClients();
     }, []);
+
+    const handleSelectAll = (e) => {
+        if (e.target.checked) setSelectedClients(filteredClients.map(c => c._id));
+        else setSelectedClients([]);
+    };
+
+    const handleSelect = (id) => {
+        setSelectedClients(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    };
 
     const fetchClients = async () => {
         try {
@@ -97,21 +107,29 @@ export default function ClientsPage() {
             </div>
 
             <div style={{ background: "#141824", border: "1px solid #1e2535", borderRadius: 12, overflow: "hidden" }}>
-                <div style={{ padding: "16px 20px", borderBottom: "1px solid #1e2535", display: "flex", alignItems: "center", gap: 12 }}>
-                    <Search size={18} color="#64748b" />
-                    <input
-                        type="text"
-                        placeholder="Search clients by name or email..."
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        style={{ background: "transparent", border: "none", color: "#f1f5f9", fontSize: 14, width: "100%", outline: "none" }}
-                    />
+                <div style={{ padding: "16px 20px", borderBottom: "1px solid #1e2535", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1 }}>
+                        <Search size={18} color="#64748b" />
+                        <input
+                            type="text"
+                            placeholder="Search clients by name or email..."
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            style={{ background: "transparent", border: "none", color: "#f1f5f9", fontSize: 14, width: "100%", outline: "none" }}
+                        />
+                    </div>
+                    {selectedClients.length > 0 && (
+                        <button onClick={() => handleDelete(selectedClients)} style={{ background: "#ef4444", color: "#fff", border: "none", padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                            <Trash2 size={14} /> Delete Selected ({selectedClients.length})
+                        </button>
+                    )}
                 </div>
 
                 <div style={{ overflowX: "auto" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
                         <thead>
                             <tr style={{ background: "#0f1420", color: "#64748b", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                                <th style={{ padding: "16px 20px", width: 40 }}><input type="checkbox" checked={selectedClients.length === filteredClients.length && filteredClients.length > 0} onChange={handleSelectAll} /></th>
                                 <th style={{ padding: "16px 20px", fontWeight: 600 }}>Client Name</th>
                                 <th style={{ padding: "16px 20px", fontWeight: 600 }}>Contact Info</th>
                                 <th style={{ padding: "16px 20px", fontWeight: 600 }}>Type</th>
@@ -127,6 +145,7 @@ export default function ClientsPage() {
                             ) : (
                                 filteredClients.map(client => (
                                     <tr key={client._id} style={{ borderTop: "1px solid #1e2535", transition: "background 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "#1a1f2e"} onMouseOut={e => e.currentTarget.style.background = "transparent"}>
+                                        <td style={{ padding: "16px 20px" }}><input type="checkbox" checked={selectedClients.includes(client._id)} onChange={() => handleSelect(client._id)} /></td>
                                         <td style={{ padding: "16px 20px" }}>
                                             <div style={{ color: "#f1f5f9", fontSize: 14, fontWeight: 600 }}>{client.name}</div>
                                             <div style={{ color: "#64748b", fontSize: 12, marginTop: 4 }}>Priority: <span style={{ color: client.priority === 'High' ? '#ef4444' : '#94a3b8' }}>{client.priority}</span></div>
