@@ -19,6 +19,11 @@ api.interceptors.response.use(r => r, err => {
   return Promise.reject(err);
 });
 
+export const authAPI = {
+  login: (d) => api.post('/auth/login', d),
+  getMe: () => api.get('/auth/me')
+};
+
 export const roleAPI = {
   getAll: (p) => api.get('/roles', { params: p }),
   getById: (id) => api.get(`/roles/${id}`),
