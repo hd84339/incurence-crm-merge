@@ -79,4 +79,11 @@ reportRouter.get('/dashboard', async (req, res) => {
   } catch(e) { res.status(500).json({ success:false, message:e.message }); }
 });
 
-module.exports = { roleRouter, empRouter, taskRouter, clientRouter, policyRouter, claimRouter, reminderRouter, targetRouter, reportRouter };
+// Auth routes
+const authRouter = express.Router();
+const authc = require('../controllers/authController');
+const { protect } = require('../config/authMiddleware'); // Need to check if this middleware exists
+authRouter.post('/login', authc.login);
+authRouter.get('/me', protect, authc.getMe);
+
+module.exports = { authRouter, roleRouter, empRouter, taskRouter, clientRouter, policyRouter, claimRouter, reminderRouter, targetRouter, reportRouter };

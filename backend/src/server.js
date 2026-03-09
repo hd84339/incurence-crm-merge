@@ -6,13 +6,13 @@ const morgan     = require('morgan');
 const compression = require('compression');
 const rateLimit  = require('express-rate-limit');
 const connectDB  = require('./config/database');
-const { roleRouter, empRouter, taskRouter, clientRouter, policyRouter, claimRouter, reminderRouter, targetRouter, reportRouter } = require('./routes/index');
+const { authRouter, roleRouter, empRouter, taskRouter, clientRouter, policyRouter, claimRouter, reminderRouter, targetRouter, reportRouter } = require('./routes/index');
 
 const app = express();
 connectDB();
 
 app.use(helmet());
-app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000', credentials: true }));
+app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173', credentials: true })); // Updated to VITE default port
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -21,6 +21,7 @@ app.use('/api/', rateLimit({ windowMs: +(process.env.RATE_LIMIT_WINDOW_MS||90000
 
 app.get('/health', (_, res) => res.json({ success:true, message:'Server is running', version:'2.0.0', env:process.env.NODE_ENV, timestamp:new Date() }));
 
+app.use('/api/auth',      authRouter);
 app.use('/api/roles',     roleRouter);
 app.use('/api/employees', empRouter);
 app.use('/api/tasks',     taskRouter);
